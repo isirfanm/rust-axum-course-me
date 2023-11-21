@@ -2,13 +2,17 @@
 
 use std::{net::SocketAddr, str::FromStr};
 
-use axum::{response::Html, routing::get, Router};
+use axum::{
+    response::{Html, IntoResponse},
+    routing::get,
+    Router,
+};
 
 #[tokio::main]
 async fn main() {
     let routes_hello = Router::new().route(
         "/hello",
-        get(|| async { Html("Hello <strong>World!!!</strong>") }),
+        get(handler_hello),
     );
 
     // region:      --- Start Server
@@ -19,4 +23,10 @@ async fn main() {
         .await
         .unwrap();
     // endregion:   --- Start Server
+}
+
+async fn handler_hello() -> impl IntoResponse {
+    println!("->> {:<12} - handler_hello", "HENDLER");
+
+    Html("Hello <strong>World!!!</strong>")
 }
