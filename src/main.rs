@@ -10,6 +10,7 @@ use axum::{
     Router,
 };
 use serde::Deserialize;
+use tower_cookies::CookieManagerLayer;
 use tower_http::services::ServeDir;
 
 mod error;
@@ -17,6 +18,7 @@ mod error;
 pub use self::error::{Error, Result};
 
 mod web;
+mod model;
 
 #[tokio::main]
 async fn main() {
@@ -24,6 +26,7 @@ async fn main() {
         .merge(routes_hello())
         .merge(web::routes_login::routes())
         .layer(middleware::map_response(main_response_mapper))
+        .layer(CookieManagerLayer::new())
         .fallback_service(routes_static());
 
     // region:      --- Start Server

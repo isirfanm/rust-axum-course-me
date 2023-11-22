@@ -19,5 +19,7 @@ async fn quick_dev() -> Result<()> {
     );
     req_login.await?.print().await?;
 
+    hc.do_get("/hello2/John").await?.print().await?;
+
     Ok(())
 }
