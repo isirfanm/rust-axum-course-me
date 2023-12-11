@@ -59,7 +59,7 @@ impl ModelController {
     }
 
     pub async fn delete_ticket(&self, id: u64) -> Result<Ticket> {
-        let mut store = self.tickets_store.lock()?;
+        let mut store = self.tickets_store.lock().unwrap();
 
         let ticket: Option<Ticket> = store.get_mut(id as usize).and_then(|t| t.take());
 
