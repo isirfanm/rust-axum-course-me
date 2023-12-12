@@ -37,11 +37,9 @@ async fn main() -> Result<()> {
 
     // region:      --- Start Server
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
+    let tcp_listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     println!("->> LISTENING on {addr}\n");
-    axum::Server::bind(&addr)
-        .serve(routes_all.into_make_service())
-        .await
-        .unwrap();
+    axum::serve(tcp_listener, routes_all).await.unwrap();
     // endregion:   --- Start Server
 
     Ok(())
