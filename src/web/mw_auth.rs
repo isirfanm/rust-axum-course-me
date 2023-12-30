@@ -11,6 +11,8 @@ pub async fn mw_require_auth<B>(
     req: Request<B>,
     next: Next<B>,
 ) -> Result<Response> {
+    println!("->> {:12} - mw_require_auth", "MIDDLEWARE");
+    
     let auth_token = cookies.get(AUTH_TOKEN).map(|c| c.value().to_string());
 
     // TODO: Real auth-token parsing & validation.
