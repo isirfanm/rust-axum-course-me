@@ -16,9 +16,13 @@ pub async fn mw_require_auth<B>(
 
     let auth_token = cookies.get(AUTH_TOKEN).map(|c| c.value().to_string());
 
-    // TODO: Real auth-token parsing & validation.
-    auth_token.ok_or(Error::AuthFailNoAuthTokenCookie)?;
+    // Parse token.
+    let (user_id, exp, sign) = auth_token
+        .ok_or(Error::AuthFailNoAuthTokenCookie)
+        .and_then(parse_token)?;
 
+    // TODO: Token components validations.
+    
     Ok(next.run(req).await)
 }
 
