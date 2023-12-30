@@ -2,17 +2,19 @@
 
 use std::{net::SocketAddr, str::FromStr};
 
+use crate::model::ModelController;
 use axum::{
     extract::{Path, Query},
     middleware,
     response::{Html, IntoResponse, Response},
     routing::{get, get_service},
-    Router,
+    Json, Router,
 };
 use serde::Deserialize;
+use serde_json::json;
 use tower_cookies::CookieManagerLayer;
 use tower_http::services::ServeDir;
-use crate::model::ModelController;
+use uuid::Uuid;
 
 pub use self::error::{Error, Result};
 
@@ -34,6 +36,10 @@ async fn main() -> Result<()> {
         .merge(web::routes_login::routes())
         .nest("/api", routes_apis)
         .layer(middleware::map_response(main_response_mapper))
+        .layer(middleware::from_fn_with_state(
+            mc.clone(),
+            web::mw_auth::mw_ctx_resolver,
+        ))
         .layer(CookieManagerLayer::new())
         .fallback_service(routes_static());
 
@@ -51,9 +57,35 @@ async fn main() -> Result<()> {
 
 async fn main_response_mapper(res: Response) -> Response {
     println!("->> {:<12} - main_response_mapper", "RES_MAPPER");
+    let uuid = Uuid::new_v4();
+
+    // -- Get the eventual response error.
+    let service_error = res.extensions().get::<Error>();
+    let client_status_error = service_error.map(|se| se.client_status_and_error());
+
+    // -- If client error, build new response.
+    let error_response =
+        client_status_error
+            .as_ref()
+            .map(|&(ref status_code, ref client_error)| {
+                let client_error_body = json!({
+                    "error": {
+                        "type": client_error.as_ref(),
+                        "req_uuid": uuid.to_string(),
+                    }
+                });
+
+                println!("    ->> client error body: {client_error_body}");
+
+                // Build new response from the client_error_body
+                (*status_code, Json(client_error_body)).into_response()
+            });
+
+    // TODO: Build and log the server log line.
+    println!("    ->> server log line - {uuid} - Error: {service_error:?}");
 
     println!();
-    res
+    error_response.unwrap_or(res)
 }
 
 fn routes_static() -> Router {
