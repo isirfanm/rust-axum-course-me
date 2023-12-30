@@ -17,7 +17,7 @@ pub async fn mw_require_auth<B>(
     req: Request<B>,
     next: Next<B>,
 ) -> Result<Response> {
-    println!("->> {:12} - mw_require_auth", "MIDDLEWARE");
+    println!("->> {:12} - mw_require_auth - {ctx:?}", "MIDDLEWARE");
 
     ctx?;
 
@@ -30,7 +30,7 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctx {
     type Rejection = Error;
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self> {
-        print!("->> {:<12} - Ctx", "EXTRACTOR");
+        println!("->> {:<12} - Ctx", "EXTRACTOR");
 
         // User the cookies extractor.
         let cookies = parts.extract::<Cookies>().await.unwrap();
